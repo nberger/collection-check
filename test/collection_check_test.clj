@@ -8,6 +8,7 @@
   (gen/tuple gen/int))
 
 (deftest test-identities
+  (assert-queue-like 100 (clojure.lang.PersistentQueue/EMPTY) gen-element)
   (assert-vector-like 100 [] gen-element)
   (assert-map-like 100 (sorted-map) gen-element gen-element {:base (sorted-map) :ordered? true})
   (assert-map-like 100 {} gen-element gen-element)

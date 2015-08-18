@@ -86,6 +86,19 @@
           (when ordered?
             [(seq-actions element-generator)]))))))
 
+(defn- gen-queue-actions [element-generator transient?]
+  (let [element-generator (gen-meta element-generator)
+        standard [(ttuple :pop)
+                  (ttuple :conj element-generator)]]
+    (gen/list
+      (gen/one-of
+        (concat
+          standard
+          (when transient?
+            [(transient-actions
+               (tuple* :conj! element-generator)
+               (tuple* :pop!))]))))))
+
 (defn- gen-map-actions [key-generator value-generator transient? ordered?]
   (let [key-generator (gen-meta key-generator)
         value-generator (gen-meta value-generator)
@@ -192,6 +205,11 @@
 (defn- meta-map [s]
   (->> s (map #(vector % (meta %))) (into {})))
 
+(defn assert-equivalent-queues [a b]
+  (assert-equivalent-collections a b)
+  (is (= (peek a) (peek b)))
+  (is (= 0 (compare (vec a) (vec b)))))
+
 (defn assert-equivalent-vectors [a b]
   (assert-equivalent-collections a b)
   (is (= (first a) (first b)))
@@ -260,6 +278,20 @@
       (binding [clojure.test/report #(do (old-report-fn# %)
                                          (report-failing-actions %))]
         ~@body)))
+
+(defn assert-queue-like
+  ([empty-coll element-generator]
+   (assert-queue-like 1e3 empty-coll element-generator nil))
+  ([n empty-coll element-generator]
+   (assert-queue-like n empty-coll element-generator nil))
+  ([n empty-coll element-generator
+    {:keys [base]
+     :or {base (clojure.lang.PersistentQueue/EMPTY)}}]
+   (reporting-failing-actions
+     (chuck/checking "queue-like" n
+       [actions (gen-queue-actions element-generator (transient? empty-coll))]
+       (let [[a b actions] (build-collections empty-coll base false actions)]
+         (assert-equivalent-queues a b))))))
 
 (defn assert-vector-like
   "Asserts that the given empty collection behaves like a vector."

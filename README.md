@@ -35,7 +35,7 @@ If the assertion fails, it will throw an exception describing the custom and ref
   actions = (-> coll transient (conj! -10) persistent! transient (conj! 9) persistent! transient (disj! -10) persistent! (conj -10))
 ```
 
-We can do the same for sets via `assert-set-like`.  For maps, `assert-map-like` takes two generators, one for keys, and another for values.
+We can do the same for sets via `assert-set-like`, for queues via `assert-queue-like`.  For maps, `assert-map-like` takes two generators, one for keys, and another for values.
 
 ### license
 
